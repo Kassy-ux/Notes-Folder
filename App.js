@@ -4,10 +4,10 @@ import { ThemeProvider } from './src/context/ThemeContext';
 import AppNavigator from './src/navigation/AppNavigator';
 
 export default function App() {
-  return (
-    <ThemeProvider>
-      <StatusBar style="auto" />
-      <AppNavigator />
-    </ThemeProvider>
-  );
+    return (
+        <ThemeProvider>
+            <StatusBar style="auto" />
+            <AppNavigator />
+        </ThemeProvider>
+    );
 }
