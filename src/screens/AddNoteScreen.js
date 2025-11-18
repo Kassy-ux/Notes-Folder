@@ -58,6 +58,11 @@ const AddNoteScreen = ({ navigation }) => {
             return;
         }
 
+        console.log('💾 Saving note...');
+        console.log('  Authenticated:', isAuthenticated);
+        console.log('  Title:', title.trim() || 'Untitled');
+        console.log('  Category:', category);
+
         try {
             setSaving(true);
 
@@ -72,23 +77,29 @@ const AddNoteScreen = ({ navigation }) => {
             if (isAuthenticated) {
                 try {
                     // Try to save to backend
+                    console.log('🌐 Attempting backend save...');
                     const response = await ApiService.createNote(noteData);
                     if (response.success) {
+                        console.log('✅ Backend save successful!');
                         Alert.alert('Success', '☁️ Note saved to cloud!');
                         navigation.goBack();
                         return;
                     }
                 } catch (apiError) {
-                    console.log('Backend save failed, saving locally:', apiError.message);
+                    console.log('⚠️ Backend save failed:', apiError.message);
+                    console.log('📱 Saving locally...');
                     // Fallback to local storage
                     await saveNote(noteData);
+                    console.log('✅ Local save successful!');
                     Alert.alert('Saved Locally', '📱 Could not reach server. Note saved on device and will sync when online.');
                     navigation.goBack();
                     return;
                 }
             } else {
                 // Save locally
+                console.log('📱 Saving locally (not authenticated)...');
                 await saveNote(noteData);
+                console.log('✅ Local save successful!');
                 Alert.alert('Saved Locally', '📱 Note saved to device. Sign in to sync across devices.');
                 navigation.goBack();
             }

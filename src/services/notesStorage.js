@@ -16,29 +16,37 @@ export const getNotes = async () => {
 // Save a new note
 export const saveNote = async (note) => {
     try {
+        console.log('💾 notesStorage.saveNote called with:', note);
         const existingNotes = await getNotes();
+        console.log('📦 Existing notes count:', existingNotes.length);
 
         // If note already has an ID (from backend), use it and update existing
         if (note.id) {
+            console.log('🔑 Note has ID:', note.id, '- checking if exists...');
             const noteIndex = existingNotes.findIndex(n => n.id === note.id);
             if (noteIndex >= 0) {
                 // Update existing note
+                console.log('🔄 Updating existing note at index:', noteIndex);
                 existingNotes[noteIndex] = {
                     ...existingNotes[noteIndex],
                     ...note,
                     updatedAt: new Date().toISOString()
                 };
                 await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(existingNotes));
+                console.log('✅ Note updated successfully');
                 return existingNotes[noteIndex];
             } else {
                 // Add note with existing ID
+                console.log('➕ Adding note with existing ID');
                 const updatedNotes = [note, ...existingNotes];
                 await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(updatedNotes));
+                console.log('✅ Note added successfully. Total notes:', updatedNotes.length);
                 return note;
             }
         }
 
         // New note without ID - create one
+        console.log('🆕 Creating new note with generated ID');
         const newNote = {
             id: Date.now().toString(),
             title: note.title || '',
@@ -49,8 +57,10 @@ export const saveNote = async (note) => {
             imageUrl: note.imageUrl || null,
             createdAt: new Date().toISOString(),
         };
+        console.log('🆔 Generated ID:', newNote.id);
         const updatedNotes = [newNote, ...existingNotes];
         await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(updatedNotes));
+        console.log('✅ New note saved! Total notes:', updatedNotes.length);
         return newNote;
     } catch (error) {
         console.error('Error saving note:', error);

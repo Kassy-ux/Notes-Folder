@@ -29,15 +29,18 @@ const HomeScreen = ({ navigation }) => {
     const [sortBy, setSortBy] = useState('date'); // 'date', 'title', 'pinned'
 
     const loadNotes = useCallback(async () => {
+        console.log('🔄 Loading notes... isAuthenticated:', isAuthenticated);
         try {
             setLoading(true);
 
             // If authenticated, try to load from backend first
             if (isAuthenticated) {
                 try {
+                    console.log('🌐 Attempting to load from backend...');
                     const response = await ApiService.getNotes();
-                    if (response?.success && response?.data?.notes) {
-                        const backendNotes = response.data.notes;
+                    if (response?.success && Array.isArray(response?.data)) {
+                        const backendNotes = response.data;
+                        console.log('✅ Backend notes loaded:', backendNotes.length);
                         setNotes(backendNotes);
 
                         // Save to local storage as backup (without awaiting to speed up)
@@ -53,13 +56,16 @@ const HomeScreen = ({ navigation }) => {
                         return; // Success, exit early
                     }
                 } catch (apiError) {
-                    console.log('Backend not available, loading from local storage');
+                    console.log('⚠️ Backend not available:', apiError.message);
+                    console.log('📱 Loading from local storage...');
                     // Continue to load from local storage below
                 }
             }
 
             // Load from local storage (offline mode or backend failed)
             const loadedNotes = await getNotes();
+            console.log('📦 Local notes loaded:', loadedNotes.length);
+            console.log('📝 First note:', loadedNotes[0]);
             setNotes(Array.isArray(loadedNotes) ? loadedNotes : []);
         } catch (error) {
             console.error('Error loading notes:', error);
@@ -84,6 +90,7 @@ const HomeScreen = ({ navigation }) => {
     );
 
     const filterAndSortNotes = useCallback(() => {
+        console.log('🔍 Filtering notes. Total:', notes.length, 'Search:', searchQuery);
         let result = [...notes];
 
         // Filter by search query
@@ -110,6 +117,7 @@ const HomeScreen = ({ navigation }) => {
             return 0;
         });
 
+        console.log('✨ Filtered result:', result.length, 'notes');
         setFilteredNotes(result);
     }, [notes, searchQuery, sortBy]);
 

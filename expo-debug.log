@@ -1,0 +1,7 @@
+Starting project at /home/sidney/Documents/Notes Folder
+› Port 8081 is running this app in another window
+  /home/sidney/Documents/Notes Folder (pid 603101)
+Input is required, but 'npx expo' is in non-interactive mode.
+Required input:
+> Use port 8082 instead?
+› Skipping dev server
