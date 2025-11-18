@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: 15, // Add more space from status bar
+        paddingTop: 25, // Add more space from status bar
     },
     keyboardView: {
         flex: 1,

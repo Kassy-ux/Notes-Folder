@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#f5f5f5',
-        paddingTop: 15, // Add more space from status bar
+        paddingTop: 25, // Add more space from status bar
     },
     header: {
         flexDirection: 'row',
