@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
 const NoteCard = ({ note, onPress }) => {
@@ -38,6 +38,29 @@ const NoteCard = ({ note, onPress }) => {
                 <Text style={[styles.preview, { color: colors.textSecondary }]} numberOfLines={3}>
                     {getPreview(note.content)}
                 </Text>
+
+                {/* Image thumbnail if available */}
+                {note.imageUrl && (
+                    <View style={styles.imageThumbnailContainer}>
+                        <Image source={{ uri: note.imageUrl }} style={styles.imageThumbnail} />
+                    </View>
+                )}
+
+                {/* Tags */}
+                {note.tags && note.tags.length > 0 && (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.tagsContainer}
+                    >
+                        {note.tags.map((tag, index) => (
+                            <View key={index} style={[styles.tagChip, { backgroundColor: colors.border }]}>
+                                <Text style={[styles.tagText, { color: colors.text }]}>#{tag}</Text>
+                            </View>
+                        ))}
+                    </ScrollView>
+                )}
+
                 <View style={styles.footer}>
                     <Text style={[styles.date, { color: colors.textTertiary }]}>
                         {formatDate(note.createdAt)}
@@ -101,6 +124,30 @@ const styles = StyleSheet.create({
         color: '#666',
         lineHeight: 20,
         marginBottom: 8,
+    },
+    imageThumbnailContainer: {
+        marginBottom: 8,
+    },
+    imageThumbnail: {
+        width: '100%',
+        height: 120,
+        borderRadius: 8,
+    },
+    tagsContainer: {
+        flexDirection: 'row',
+        marginBottom: 8,
+    },
+    tagChip: {
+        backgroundColor: '#e8e8e8',
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 12,
+        marginRight: 6,
+    },
+    tagText: {
+        fontSize: 11,
+        color: '#555',
+        fontWeight: '500',
     },
     footer: {
         flexDirection: 'row',

@@ -17,10 +17,36 @@ export const getNotes = async () => {
 export const saveNote = async (note) => {
     try {
         const existingNotes = await getNotes();
+        
+        // If note already has an ID (from backend), use it and update existing
+        if (note.id) {
+            const noteIndex = existingNotes.findIndex(n => n.id === note.id);
+            if (noteIndex >= 0) {
+                // Update existing note
+                existingNotes[noteIndex] = {
+                    ...existingNotes[noteIndex],
+                    ...note,
+                    updatedAt: new Date().toISOString()
+                };
+                await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(existingNotes));
+                return existingNotes[noteIndex];
+            } else {
+                // Add note with existing ID
+                const updatedNotes = [note, ...existingNotes];
+                await AsyncStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(updatedNotes));
+                return note;
+            }
+        }
+        
+        // New note without ID - create one
         const newNote = {
-            id: Date.now().toString(), // Simple unique ID based on timestamp
-            title: note.title,
-            content: note.content,
+            id: Date.now().toString(),
+            title: note.title || '',
+            content: note.content || '',
+            category: note.category || 'General',
+            isPinned: note.isPinned || false,
+            tags: note.tags || [],
+            imageUrl: note.imageUrl || null,
             createdAt: new Date().toISOString(),
         };
         const updatedNotes = [newNote, ...existingNotes];

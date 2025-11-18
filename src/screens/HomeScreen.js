@@ -5,18 +5,22 @@ import {
     FlatList,
     TouchableOpacity,
     StyleSheet,
-    SafeAreaView,
     ActivityIndicator,
     TextInput,
     Modal,
+    Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { getNotes } from '../services/notesStorage';
+import { useAuth } from '../context/AuthContext';
+import ApiService from '../services/api';
+import { getNotes, saveNote as saveNoteLocal } from '../services/notesStorage';
 import NoteCard from '../components/NoteCard';
 import { useTheme } from '../context/ThemeContext';
 
 const HomeScreen = ({ navigation }) => {
     const { colors, isDark, toggleTheme } = useTheme();
+    const { isAuthenticated } = useAuth();
     const [notes, setNotes] = useState([]);
     const [filteredNotes, setFilteredNotes] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -27,14 +31,50 @@ const HomeScreen = ({ navigation }) => {
     const loadNotes = useCallback(async () => {
         try {
             setLoading(true);
+            
+            // If authenticated, try to load from backend first
+            if (isAuthenticated) {
+                try {
+                    const response = await ApiService.getNotes();
+                    if (response?.success && response?.data?.notes) {
+                        const backendNotes = response.data.notes;
+                        setNotes(backendNotes);
+                        
+                        // Save to local storage as backup (without awaiting to speed up)
+                        if (Array.isArray(backendNotes)) {
+                            backendNotes.forEach(note => {
+                                if (note && note.id) {
+                                    saveNoteLocal(note).catch(err => 
+                                        console.log('Cache save error:', err)
+                                    );
+                                }
+                            });
+                        }
+                        return; // Success, exit early
+                    }
+                } catch (apiError) {
+                    console.log('Backend not available, loading from local storage');
+                    // Continue to load from local storage below
+                }
+            }
+            
+            // Load from local storage (offline mode or backend failed)
             const loadedNotes = await getNotes();
-            setNotes(loadedNotes);
+            setNotes(Array.isArray(loadedNotes) ? loadedNotes : []);
         } catch (error) {
             console.error('Error loading notes:', error);
+            // Try local storage as last resort
+            try {
+                const loadedNotes = await getNotes();
+                setNotes(Array.isArray(loadedNotes) ? loadedNotes : []);
+            } catch (localError) {
+                console.error('Failed to load local notes:', localError);
+                setNotes([]);
+            }
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [isAuthenticated]);
 
     // Load notes whenever screen comes into focus
     useFocusEffect(
@@ -110,6 +150,14 @@ const HomeScreen = ({ navigation }) => {
             <View style={[styles.header, { backgroundColor: colors.cardBackground, borderBottomColor: colors.border }]}>
                 <Text style={[styles.headerTitle, { color: colors.text }]}>My Notes</Text>
                 <View style={styles.headerButtons}>
+                    {isAuthenticated && (
+                        <TouchableOpacity
+                            style={[styles.trashButton, { backgroundColor: isDark ? colors.border : '#f0f0f0' }]}
+                            onPress={() => navigation.navigate('Trash')}
+                        >
+                            <Text style={[styles.trashButtonText, { color: colors.text }]}>🗑️</Text>
+                        </TouchableOpacity>
+                    )}
                     <TouchableOpacity
                         style={[styles.sortButton, { backgroundColor: isDark ? colors.border : '#f0f0f0' }]}
                         onPress={() => setSortModalVisible(true)}
@@ -233,6 +281,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
+    },
+    trashButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#f0f0f0',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    trashButtonText: {
+        fontSize: 18,
     },
     sortButton: {
         width: 44,

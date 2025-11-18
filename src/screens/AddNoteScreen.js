@@ -5,23 +5,51 @@ import {
     TextInput,
     TouchableOpacity,
     StyleSheet,
-    SafeAreaView,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
     Alert,
+    ActivityIndicator,
+    Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ImagePicker from 'expo-image-picker';
+import { useAuth } from '../context/AuthContext';
+import ApiService from '../services/api';
 import { saveNote } from '../services/notesStorage';
 import { useTheme } from '../context/ThemeContext';
 
-const CATEGORIES = ['general', 'work', 'personal', 'ideas', 'study'];
+const CATEGORIES = ['General', 'Work', 'Personal', 'Ideas', 'Study'];
 
 const AddNoteScreen = ({ navigation }) => {
     const { colors } = useTheme();
+    const { isAuthenticated } = useAuth();
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const [category, setCategory] = useState('general');
+    const [category, setCategory] = useState('General');
+    const [tags, setTags] = useState('');
+    const [image, setImage] = useState(null);
     const [saving, setSaving] = useState(false);
+
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        
+        if (status !== 'granted') {
+            Alert.alert('Permission Required', 'Please grant camera roll permissions to add images.');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.7,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+            setImage(result.assets[0].uri);
+        }
+    };
 
     const handleSaveNote = async () => {
         // Validation
@@ -32,14 +60,38 @@ const AddNoteScreen = ({ navigation }) => {
 
         try {
             setSaving(true);
-            await saveNote({
+            
+            const noteData = {
                 title: title.trim() || 'Untitled',
                 content: content.trim(),
-                category: category,
-            });
+                category: category.toLowerCase(), // Backend expects lowercase
+                tags: tags.trim() ? tags.split(',').map(t => t.trim()) : [],
+                imageUrl: image || null,
+            };
 
-            // Navigate back to home screen
-            navigation.goBack();
+            if (isAuthenticated) {
+                try {
+                    // Try to save to backend
+                    const response = await ApiService.createNote(noteData);
+                    if (response.success) {
+                        Alert.alert('Success', '☁️ Note saved to cloud!');
+                        navigation.goBack();
+                        return;
+                    }
+                } catch (apiError) {
+                    console.log('Backend save failed, saving locally:', apiError.message);
+                    // Fallback to local storage
+                    await saveNote(noteData);
+                    Alert.alert('Saved Locally', '📱 Could not reach server. Note saved on device and will sync when online.');
+                    navigation.goBack();
+                    return;
+                }
+            } else {
+                // Save locally
+                await saveNote(noteData);
+                Alert.alert('Saved Locally', '📱 Note saved to device. Sign in to sync across devices.');
+                navigation.goBack();
+            }
         } catch (error) {
             console.error('Error saving note:', error);
             Alert.alert('Error', 'Failed to save note. Please try again.');
@@ -136,6 +188,33 @@ const AddNoteScreen = ({ navigation }) => {
                             multiline
                             textAlignVertical="top"
                         />
+
+                        {/* Tags Input */}
+                        <TextInput
+                            style={[styles.tagsInput, { color: colors.text, borderColor: colors.border }]}
+                            placeholder="Tags (comma separated: work, important, etc.)"
+                            placeholderTextColor={colors.placeholder}
+                            value={tags}
+                            onChangeText={setTags}
+                        />
+
+                        {/* Image Attachment */}
+                        <TouchableOpacity
+                            style={[styles.imageButton, { borderColor: colors.border }]}
+                            onPress={pickImage}
+                        >
+                            <Text style={[styles.imageButtonText, { color: colors.primary }]}>
+                                📷 {image ? 'Change Image' : 'Add Image'}
+                            </Text>
+                        </TouchableOpacity>
+
+                        {image && (
+                            <View style={styles.imagePreview}>
+                                <Text style={[styles.imageText, { color: colors.textSecondary }]}>
+                                    ✓ Image attached
+                                </Text>
+                            </View>
+                        )}
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
@@ -226,6 +305,33 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         minHeight: 200,
         paddingTop: 8,
+    },
+    tagsInput: {
+        fontSize: 14,
+        padding: 12,
+        borderWidth: 1,
+        borderRadius: 8,
+        marginTop: 16,
+    },
+    imageButton: {
+        marginTop: 16,
+        padding: 16,
+        borderWidth: 2,
+        borderRadius: 8,
+        borderStyle: 'dashed',
+        alignItems: 'center',
+    },
+    imageButtonText: {
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    imagePreview: {
+        marginTop: 8,
+        padding: 8,
+    },
+    imageText: {
+        fontSize: 14,
+        fontStyle: 'italic',
     },
 });
 
