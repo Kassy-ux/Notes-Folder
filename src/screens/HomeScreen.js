@@ -31,7 +31,7 @@ const HomeScreen = ({ navigation }) => {
     const loadNotes = useCallback(async () => {
         try {
             setLoading(true);
-            
+
             // If authenticated, try to load from backend first
             if (isAuthenticated) {
                 try {
@@ -39,12 +39,12 @@ const HomeScreen = ({ navigation }) => {
                     if (response?.success && response?.data?.notes) {
                         const backendNotes = response.data.notes;
                         setNotes(backendNotes);
-                        
+
                         // Save to local storage as backup (without awaiting to speed up)
                         if (Array.isArray(backendNotes)) {
                             backendNotes.forEach(note => {
                                 if (note && note.id) {
-                                    saveNoteLocal(note).catch(err => 
+                                    saveNoteLocal(note).catch(err =>
                                         console.log('Cache save error:', err)
                                     );
                                 }
@@ -57,7 +57,7 @@ const HomeScreen = ({ navigation }) => {
                     // Continue to load from local storage below
                 }
             }
-            
+
             // Load from local storage (offline mode or backend failed)
             const loadedNotes = await getNotes();
             setNotes(Array.isArray(loadedNotes) ? loadedNotes : []);

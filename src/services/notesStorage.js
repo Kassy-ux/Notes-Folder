@@ -17,7 +17,7 @@ export const getNotes = async () => {
 export const saveNote = async (note) => {
     try {
         const existingNotes = await getNotes();
-        
+
         // If note already has an ID (from backend), use it and update existing
         if (note.id) {
             const noteIndex = existingNotes.findIndex(n => n.id === note.id);
@@ -37,7 +37,7 @@ export const saveNote = async (note) => {
                 return note;
             }
         }
-        
+
         // New note without ID - create one
         const newNote = {
             id: Date.now().toString(),

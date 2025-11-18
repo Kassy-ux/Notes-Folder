@@ -61,7 +61,7 @@ const EditNoteScreen = ({ navigation, route }) => {
 
         try {
             setSaving(true);
-            
+
             const noteData = {
                 title: title.trim() || 'Untitled',
                 content: content.trim(),
@@ -84,7 +84,7 @@ const EditNoteScreen = ({ navigation, route }) => {
             navigation.goBack();
         } catch (error) {
             console.error('Error updating note:', error);
-            
+
             // If backend fails, try local storage as fallback
             if (isAuthenticated) {
                 try {

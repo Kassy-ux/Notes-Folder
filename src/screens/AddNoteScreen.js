@@ -33,7 +33,7 @@ const AddNoteScreen = ({ navigation }) => {
 
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        
+
         if (status !== 'granted') {
             Alert.alert('Permission Required', 'Please grant camera roll permissions to add images.');
             return;
@@ -60,7 +60,7 @@ const AddNoteScreen = ({ navigation }) => {
 
         try {
             setSaving(true);
-            
+
             const noteData = {
                 title: title.trim() || 'Untitled',
                 content: content.trim(),
