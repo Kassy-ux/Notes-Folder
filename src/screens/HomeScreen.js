@@ -24,11 +24,23 @@ const HomeScreen = ({ navigation }) => {
     const [sortModalVisible, setSortModalVisible] = useState(false);
     const [sortBy, setSortBy] = useState('date'); // 'date', 'title', 'pinned'
 
+    const loadNotes = useCallback(async () => {
+        try {
+            setLoading(true);
+            const loadedNotes = await getNotes();
+            setNotes(loadedNotes);
+        } catch (error) {
+            console.error('Error loading notes:', error);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     // Load notes whenever screen comes into focus
     useFocusEffect(
         useCallback(() => {
             loadNotes();
-        }, [])
+        }, [loadNotes])
     );
 
     const filterAndSortNotes = useCallback(() => {
