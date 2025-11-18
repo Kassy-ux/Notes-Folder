@@ -147,6 +147,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
+        paddingTop: 10, // Add space from status bar
     },
     keyboardView: {
         flex: 1,
