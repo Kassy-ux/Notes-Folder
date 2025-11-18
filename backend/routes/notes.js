@@ -3,7 +3,7 @@ import { body, validationResult } from 'express-validator';
 import { db } from '../config/database.js';
 import { notes, attachments } from '../config/schema.js';
 import { authMiddleware } from '../middleware/auth.js';
-import { eq, and, desc, asc, like, or, isNull } from 'drizzle-orm';
+import { eq, and, desc, asc, like, or, isNull, not } from 'drizzle-orm';
 
 const router = express.Router();
 
@@ -317,7 +317,7 @@ router.get('/trash/all', async (req, res) => {
       .where(
         and(
           eq(notes.userId, req.userId),
-          isNull(notes.deletedAt).not()
+          not(isNull(notes.deletedAt))
         )
       )
       .orderBy(desc(notes.deletedAt));
