@@ -31,24 +31,7 @@ const HomeScreen = ({ navigation }) => {
         }, [])
     );
 
-    // Search and sort when notes or query changes
-    React.useEffect(() => {
-        filterAndSortNotes();
-    }, [notes, searchQuery, sortBy]);
-
-    const loadNotes = async () => {
-        try {
-            setLoading(true);
-            const loadedNotes = await getNotes();
-            setNotes(loadedNotes);
-        } catch (error) {
-            console.error('Error loading notes:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const filterAndSortNotes = () => {
+    const filterAndSortNotes = useCallback(() => {
         let result = [...notes];
 
         // Filter by search query
@@ -76,7 +59,12 @@ const HomeScreen = ({ navigation }) => {
         });
 
         setFilteredNotes(result);
-    };
+    }, [notes, searchQuery, sortBy]);
+
+    // Search and sort when notes or query changes
+    React.useEffect(() => {
+        filterAndSortNotes();
+    }, [filterAndSortNotes]);
 
     const handleSortSelect = (sortOption) => {
         setSortBy(sortOption);
